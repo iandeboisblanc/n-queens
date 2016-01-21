@@ -107,8 +107,10 @@ window.countNRooksSolutions3 = function(n) {
   var placeRook = function(board, n, row, numPlaced){
     for(var i = 0; i < n; i++){
       board.togglePiece(0,i);
-      //iterate through past results at n-1
-        // fill open celss with past results
+      var openCells = /* something */;
+      for(var key in pastResults(n-1)){ //need case for 0 to start?
+        // fill open cells with past results
+      }
         if(!board.hasAnyRooksConflicts()){
           pastResults[n][board.rows().stringify()] = board.rows();
         }
