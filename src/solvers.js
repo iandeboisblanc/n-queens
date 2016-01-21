@@ -64,7 +64,7 @@ window.countNRooksSolutions = function(n) {
   placeRook(0,0);
   console.log('Number of solutions for ' + n + ' rooks:', count);
   return count;
-  //230s
+  //230s - 274s
   /*
   have an array of past results, index = n, value is object containing all solutions
   for a given n, you can iterate through the top row, and assume the remaining available
@@ -77,7 +77,6 @@ window.countNRooksSolutions = function(n) {
 window.countNRooksSolutions2 = function(n) {
   var board = new Board({n:n});
   var count = 0;
-  var combinationsLimit = n*n;
   var rowMap = [];
   for(var i = 0; i < n; i++) {
     var row = [];
@@ -90,89 +89,117 @@ window.countNRooksSolutions2 = function(n) {
       }
     }
     rowMap.push(row);
-  }
-  for(var k = 0; k < n*n; k++) {
-    for(var l = 0; l < n; l++) {
-      board.set(l,rowMap[Math.floor(k/(Math.pow(n,l))%n)]);
-    }
+  // }
+  // iteration 1
+  // for(var k = 0; k < Math.pow(n,n); k++) {
+  //   for(var l = 0; l < n; l++) {
+  //     board.set(l,rowMap[Math.floor(k/(Math.pow(n,l))%n)]);
+  // }
+
+
+
     if(!board.hasAnyRooksConflicts()){
       count++;
     }
-  }
   return count;
+  }
+  //1201s
 };
 
-window.countNRooksSolutions3 = function(n) {
-  var pastResults = [];
+window.countNRooksSolutions = function(n) {
+  var pastResults = [{}];
+  pastResults[0]['[]'] = [];
   var placeRook = function(board, n, row, numPlaced){
     for(var i = 0; i < n; i++){
       board.togglePiece(0,i);
-      var openCells = /* something */;
-      for(var key in pastResults(n-1)){ //need case for 0 to start?
-        // fill open cells with past results
-      }
-        if(!board.hasAnyRooksConflicts()){
-          pastResults[n][board.rows().stringify()] = board.rows();
+      var openCells = [];
+      for(var j = 0; j < n; j++) {
+        if(j !== i) {
+          for(var k = 1; k < n; k++){
+            var cell = [j,k];
+            openCells.push(cell);
+          }
         }
-      board.togglePiece(0,i);
+      }
+      for(var key in pastResults[n-1]){ //need case for 0 to start?
+        var valuesToFill = pastResults[n-1][key];
+        for(var y = 0; y < valuesToFill.length; y++) {
+          if(valuesToFill[y] === 1) {
+            board.togglePiece(openCells[y][1],openCells[y][0]);
+          }
+        }
+        // if(!board.hasAnyRooksConflicts()){
+        if(pastResults[n] === undefined){
+          pastResults[n] = {};
+        }
+        var boardCopy = _.flatten(board.rows());
+        pastResults[n][JSON.stringify(boardCopy)] = boardCopy;
+        // }
+        for(var z = 0; z < valuesToFill.length; z++) {
+          if(valuesToFill[z] === 1) {
+            board.togglePiece(openCells[z][1],openCells[z][0]);
+          }
+        }
+      }
+      board = new Board({n:n});
     }
     return;
   };
   for(var i = 0; i < n; i++) {
-    var board = new Board({n:i});
-    placeRook(board, i, 0, 0);
+    var board = new Board({n:i+1});
+    placeRook(board, i+1, 0, 0);
   }
-  return pastResults[n].length; //but won't work since it's an object and not an array
+  console.log(Object.keys(pastResults[n]).length);
+  return Object.keys(pastResults[n]).length; //but won't work since it's an object and not an array
 };
 
 // return a matrix (an array of arrays) representing a single nxn chessboard, with n queens placed such that none of them can attack each other
 window.findNQueensSolution = function(n) {
-  var found = false;
-  var myBoard = new Board({n:n});
-  var placeQueen = function(row,numPlaced){
-    if (numPlaced === n){
-      if(!myBoard.hasAnyQueensConflicts()){
-        found = true;
-      }
-      return;
-    }
-    for(var i = 0; i < n; i++){
-      if(!found){
-        myBoard.togglePiece(row,i);
-        placeQueen(row +1, numPlaced +1);
-        !found && myBoard.togglePiece(row,i);
-      }
-    }
-  };
+  // var found = false;
+  // var myBoard = new Board({n:n});
+  // var placeQueen = function(row,numPlaced){
+  //   if (numPlaced === n){
+  //     if(!myBoard.hasAnyQueensConflicts()){
+  //       found = true;
+  //     }
+  //     return;
+  //   }
+  //   for(var i = 0; i < n; i++){
+  //     if(!found){
+  //       myBoard.togglePiece(row,i);
+  //       placeQueen(row +1, numPlaced +1);
+  //       !found && myBoard.togglePiece(row,i);
+  //     }
+  //   }
+  // };
 
-  placeQueen(0,0);
-  var solution = myBoard.rows();
+  // placeQueen(0,0);
+  // var solution = myBoard.rows();
 
-  console.log('Single solution for ' + n + ' queens:', JSON.stringify(solution));
-  return solution;
+  // console.log('Single solution for ' + n + ' queens:', JSON.stringify(solution));
+  // return solution;
 };
 
 // return the number of nxn chessboards that exist, with n queens placed such that none of them can attack each other
 window.countNQueensSolutions = function(n) {
-  var myBoard = new Board({n:n});
-  var count = 0;
-  var placeQueen = function(row, numPlaced){
-    if (numPlaced === n){
-      if(!myBoard.hasAnyQueensConflicts()){
-        count++;
-      }
-      return;
-    }
-    for(var i = 0; i < n; i++){
-      myBoard.togglePiece(row,i);
-      placeQueen(row +1, numPlaced +1);
-      myBoard.togglePiece(row,i);
-    }
-    return;
-  };
-  placeQueen(0,0);
-  return count;
-  console.log('Number of solutions for ' + n + ' queens:', solutionCount);
-  return solutionCount;
-  //298s
+  // var myBoard = new Board({n:n});
+  // var count = 0;
+  // var placeQueen = function(row, numPlaced){
+  //   if (numPlaced === n){
+  //     if(!myBoard.hasAnyQueensConflicts()){
+  //       count++;
+  //     }
+  //     return;
+  //   }
+  //   for(var i = 0; i < n; i++){
+  //     myBoard.togglePiece(row,i);
+  //     placeQueen(row +1, numPlaced +1);
+  //     myBoard.togglePiece(row,i);
+  //   }
+  //   return;
+  // };
+  // placeQueen(0,0);
+  // console.log('Number of solutions for ' + n + ' queens:', count);
+  // return count;
+  //// 250s - 300s
 };
