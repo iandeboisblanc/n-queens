@@ -64,6 +64,7 @@ window.countNRooksSolutions = function(n) {
   placeRook(0,0);
   console.log('Number of solutions for ' + n + ' rooks:', count);
   return count;
+  //230s
   /*
   have an array of past results, index = n, value is object containing all solutions
   for a given n, you can iterate through the top row, and assume the remaining available
@@ -71,6 +72,55 @@ window.countNRooksSolutions = function(n) {
   and combine to create new solutions. Add new solutions to object (use stringified board
   as key for constant-time lookup)
   */
+};
+
+window.countNRooksSolutions2 = function(n) {
+  var board = new Board({n:n});
+  var count = 0;
+  var combinationsLimit = n*n;
+  var rowMap = [];
+  for(var i = 0; i < n; i++) {
+    var row = [];
+    for(var j = 0; j < n; j++) {
+      if(j === i){
+        row.push(1);
+      }
+      else{
+        row.push(0);
+      }
+    }
+    rowMap.push(row);
+  }
+  for(var k = 0; k < n*n; k++) {
+    for(var l = 0; l < n; l++) {
+      board.set(l,rowMap[Math.floor(k/(Math.pow(n,l))%n)]);
+    }
+    if(!board.hasAnyRooksConflicts()){
+      count++;
+    }
+  }
+  return count;
+};
+
+window.countNRooksSolutions3 = function(n) {
+  var pastResults = [];
+  var placeRook = function(board, n, row, numPlaced){
+    for(var i = 0; i < n; i++){
+      board.togglePiece(0,i);
+      //iterate through past results at n-1
+        // fill open celss with past results
+        if(!board.hasAnyRooksConflicts()){
+          pastResults[n][board.rows().stringify()] = board.rows();
+        }
+      board.togglePiece(0,i);
+    }
+    return;
+  };
+  for(var i = 0; i < n; i++) {
+    var board = new Board({n:i});
+    placeRook(board, i, 0, 0);
+  }
+  return pastResults[n].length; //but won't work since it's an object and not an array
 };
 
 // return a matrix (an array of arrays) representing a single nxn chessboard, with n queens placed such that none of them can attack each other
@@ -122,4 +172,5 @@ window.countNQueensSolutions = function(n) {
   return count;
   console.log('Number of solutions for ' + n + ' queens:', solutionCount);
   return solutionCount;
+  //298s
 };
