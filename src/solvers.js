@@ -13,8 +13,6 @@
 
 // return a matrix (an array of arrays) representing a single nxn chessboard, with n rooks placed such that none of them can attack each other
 
-
-
 window.findNRooksSolution = function(n) {
   var myBoard = new Board({n:n});
   var placeRook = function(row,col,numPlaced){
@@ -43,8 +41,8 @@ window.findNRooksSolution = function(n) {
   return solution;
 };
 
-// return the number of nxn chessboards that exist, with n rooks placed such that none of them can attack each other
-window.countNRooksSolutions = function(n) {
+// checks every combination of possible boards, checks for conflicts at each placement
+window.countNRooksSolutions1 = function(n) {
   var myBoard = new Board({n:n});
   var count = 0;
   var placeRook = function(row, numPlaced){
@@ -68,11 +66,10 @@ window.countNRooksSolutions = function(n) {
   placeRook(0,0);
   console.log('Number of solutions for ' + n + ' rooks:', count);
   return count;
-  //230s - 274s
-  //down to 12 s
-
+  //12 s
 };
 
+//tries every unique permutation of rows
 window.countNRooksSolutions2 = function(n) {
   var board = new Board({n:n});
   var count = 0;
@@ -88,24 +85,32 @@ window.countNRooksSolutions2 = function(n) {
       }
     }
     rowMap.push(row);
-  // }
-  // iteration 1
-  // for(var k = 0; k < Math.pow(n,n); k++) {
-  //   for(var l = 0; l < n; l++) {
-  //     board.set(l,rowMap[Math.floor(k/(Math.pow(n,l))%n)]);
-  // }
-
-
-
-    if(!board.hasAnyRooksConflicts()){
-      count++;
-    }
-  return count;
   }
-  //1201s
+  var results = [];
+  var permutations = function(array,result){
+    if(array.length === 0){
+      //turn the result into a board
+      board.attributes = _.extend({n:n},result);
+      //check the conflicts
+      //increment
+      count++;
+      return;
+    }
+    for(var i = 0; i < array.length; i++){
+      var subArr = array.slice();
+      result.push(subArr.splice(i,1)[0]);
+      permutations(subArr,result.slice());
+      result.pop();
+    }
+    return;
+  };
+  permutations(rowMap,[]);
+  return count;
+  //0.5s
 };
 
-window.countNRooksSolutions = function(n) {
+//assembles boards out of pre-made boards (n-1)
+window.countNRooksSolutions3 = function(n) {
   var pastResults = [{}];
   pastResults[0]['[]'] = [];
   var placeRook = function(board, n, row, numPlaced){
@@ -127,13 +132,11 @@ window.countNRooksSolutions = function(n) {
             board.togglePiece(openCells[y][1],openCells[y][0]);
           }
         }
-        // if(!board.hasAnyRooksConflicts()){
         if(pastResults[n] === undefined){
           pastResults[n] = {};
         }
         var boardCopy = _.flatten(board.rows());
         pastResults[n][JSON.stringify(boardCopy)] = boardCopy;
-        // }
         for(var z = 0; z < valuesToFill.length; z++) {
           if(valuesToFill[z] === 1) {
             board.togglePiece(openCells[z][1],openCells[z][0]);
@@ -149,7 +152,7 @@ window.countNRooksSolutions = function(n) {
     placeRook(board, i+1, 0, 0);
   }
   console.log(Object.keys(pastResults[n]).length);
-  return Object.keys(pastResults[n]).length; //but won't work since it's an object and not an array
+  return Object.keys(pastResults[n]).length; 
 };
 //1.5s
 
@@ -176,10 +179,8 @@ window.findNQueensSolution = function(n) {
       }
     }
   };
-
   placeQueen(0,0);
   var solution = myBoard.rows();
-
   console.log('Single solution for ' + n + ' queens:', JSON.stringify(solution));
   return solution;
 };
@@ -209,6 +210,47 @@ window.countNQueensSolutions = function(n) {
   placeQueen(0,0);
   console.log('Number of solutions for ' + n + ' queens:', count);
   return count;
-  ///250s - 300s
-  //1s
+  //0.9s
+};
+
+//assemble every permutation of rows, check for conflicts
+window.countNQueensSolutions2 = function(n) {
+  var board = new Board({n:n});
+  var count = 0;
+  var rowMap = [];
+  for(var i = 0; i < n; i++) {
+    var row = [];
+    for(var j = 0; j < n; j++) {
+      if(j === i){
+        row.push(1);
+      }
+      else{
+        row.push(0);
+      }
+    }
+    rowMap.push(row);
+  }
+  var results = [];
+  var permutations = function(array,result){
+    if(array.length === 0){
+      //turn the result into a board
+      board.attributes = _.extend({n:n},result);
+      //check the conflicts
+      if(!board.hasAnyQueensConflicts()){
+        //increment
+        count++;
+      }
+      return;
+    }
+    for(var i = 0; i < array.length; i++){
+      var subArr = array.slice();
+      result.push(subArr.splice(i,1)[0]);
+      permutations(subArr,result.slice());
+      result.pop();
+    }
+    return;
+  };
+  permutations(rowMap,[]);
+  return count;
+  //3s
 };
